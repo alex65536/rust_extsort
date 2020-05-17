@@ -3,26 +3,20 @@ use std::fs::File;
 use super::lines::{FromLine, IntoLine};
 use std::marker;
 
+/// Iterator to iterate over the group of equal elements.
 pub struct SameSplitIter<T> {
+    /// Lines iterator from which the elements are taken
     lines: Lines<BufReader<File>>,
     _marker: marker::PhantomData<T>
 }
 
+/// Iterator to split the source iterator onto groups of equal elements.
 pub struct SplitIter<Iter, T> {
+    /// Source iterator
     iter: Iter,
+    /// Last value taken from the source iterator
     last: Option<T>,
     _marker: marker::PhantomData<T>
-}
-
-impl<Iter, T> SplitIter<Iter, T>
-where
-    Iter: Iterator<Item = T>,
-    T: FromLine + IntoLine + Eq
-{
-    fn new(mut iter: Iter) -> Self {
-        let last = iter.next();
-        SplitIter { iter, last, _marker: marker::PhantomData }
-    }
 }
 
 impl<T: FromLine> Iterator for SameSplitIter<T> {
@@ -82,10 +76,16 @@ where
     }
 }
 
+/// Creates an iterator that splits all the items from `iter` into the groups
+/// of equal elements.
+///
+/// To perform the split, the iterator will use external memory if it's
+/// necessary.
 pub fn split<Iter, T>(iter: Iter) -> SplitIter<Iter, T>
 where
     Iter: Iterator<Item = T>,
     T: FromLine + IntoLine + Eq
 {
-    SplitIter::new(iter)
+    let last = iter.next();
+    SplitIter { iter, last, _marker: marker::PhantomData }
 }

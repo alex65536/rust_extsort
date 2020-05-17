@@ -19,15 +19,6 @@ pub trait IntoLine {
     fn into_line(self) -> String;
 }
 
-impl FromLine for String {
-    fn from_line(line: &str) -> Self { String::from(line) }
-}
-
-impl IntoLine for String {
-    fn line_len(&self) -> usize { self.len() }
-    fn into_line(self) -> String { self }
-}
-
 pub struct Config {
     /// Number of files to merge at one time
     pub num_merge: usize,

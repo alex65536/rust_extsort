@@ -1,0 +1,12 @@
+[package]
+name = "extsort"
+version = "0.1.0"
+authors = ["Alexander Kernozhitsky <sh200105@mail.ru>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+threadpool = "1.8.1"
+num_cpus = "1.13.0"
+tempdir = "0.3.7"

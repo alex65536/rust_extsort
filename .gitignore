@@ -1,0 +1,6 @@
+/target
+Cargo.lock
+test/gen
+test/input.txt
+test/output.txt
+test/answer.txt

@@ -1,12 +1,12 @@
 use std::io::{self, Lines, BufWriter, BufReader, BufRead, Write, Seek, SeekFrom};
-use std::fs::File;
 use super::lines::{FromLine, IntoLine};
 use std::marker;
+use tempfile::SpooledTempFile;
 
 /// Iterator to iterate over the group of equal elements.
 pub struct SameSplitIter<T> {
     /// Lines iterator from which the elements are taken
-    lines: Lines<BufReader<File>>,
+    lines: Lines<BufReader<SpooledTempFile>>,
     _marker: marker::PhantomData<T>
 }
 
@@ -41,10 +41,7 @@ where
         if self.last.is_none() {
             return None;
         }
-        let mut file = match tempfile::tempfile() {
-            Ok(file) => file,
-            Err(err) => return Some(Err(err))
-        };
+        let mut file = tempfile::spooled_tempfile(1 << 13);
         {
             let mut writer = BufWriter::new(&mut file);
             loop {
@@ -81,7 +78,7 @@ where
 ///
 /// To perform the split, the iterator will use external memory if it's
 /// necessary.
-pub fn split<Iter, T>(iter: Iter) -> SplitIter<Iter, T>
+pub fn split<Iter, T>(mut iter: Iter) -> SplitIter<Iter, T>
 where
     Iter: Iterator<Item = T>,
     T: FromLine + IntoLine + Eq

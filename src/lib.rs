@@ -89,7 +89,7 @@ pub struct SortedIter<T> {
     /// while iterating over the results.
     _sort: Sort<T>,
     /// `Lines` iterator over the resulting file
-    lines: Lines
+    lines: Option<Lines>
 }
 
 /// Make a `Lines` iterator from the file
@@ -101,7 +101,7 @@ impl<T: FromLine> Iterator for SortedIter<T> {
     type Item = io::Result<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.lines.next() {
+        match self.lines.as_mut()?.next() {
             Some(maybe_line) => {
                 Some(maybe_line.map(|line| T::from_line(&line)))
             },
@@ -288,13 +288,19 @@ impl<T: FromLine + IntoLine + Ord + Send + 'static> Sort<T> {
     }
 
     /// Constructs a `SortedIter` after the sorting was finished.
+    ///
+    /// This functions panics if more than one file is present on the last
+    /// stage.
     fn as_iter(self) -> io::Result<SortedIter<T>> {
-        assert_eq!(*self.file_num.borrow(), 1);
-        let filename = self.get_file_name(*self.stage_num.borrow(), 0);
-        Ok(SortedIter {
-            _sort: self,
-            lines: file_as_lines(filename)?
-        })
+        let lines = match *self.file_num.borrow() {
+            0 => None,
+            1 => {
+                let filename = self.get_file_name(*self.stage_num.borrow(), 0);
+                Some(file_as_lines(filename)?)
+            },
+            _ => panic!("More than one file exists on the last stage")
+        };
+        Ok(SortedIter {_sort: self, lines})
     }
 
     /// Creates a new `Sort` struct from the given configuration.
@@ -323,7 +329,7 @@ impl<T: FromLine + IntoLine + Ord + Send + 'static> Sort<T> {
             return Err(err);
         }
         // Then, merge the files until only one remains
-        while *self.file_num.borrow() != 1 {
+        while *self.file_num.borrow() > 1 {
             let result = self.merge_invoke();
             self.join_pool()?;
             if let Err(err) = result {

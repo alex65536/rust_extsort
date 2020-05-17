@@ -5,7 +5,9 @@ use extsort::{Sort, Config, FromLine, IntoLine};
 struct Line(String);
 
 impl FromLine for Line {
-    fn from_line(line: &str) -> Self { Line(String::from(line)) }
+    fn from_line(line: &str) -> io::Result<Self> {
+        Ok(Line(String::from(line)))
+    }
 }
 
 impl IntoLine for Line {

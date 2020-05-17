@@ -75,9 +75,8 @@ impl<T: FromLine> Iterator for SortedIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.lines.as_mut()?.next() {
-            Some(maybe_line) => {
-                Some(maybe_line.map(|line| T::from_line(&line)))
-            },
+            Some(Ok(line)) => Some(T::from_line(&line)),
+            Some(Err(err)) => Some(Err(err)),
             None => None
         }
     }
@@ -200,7 +199,10 @@ impl<T: FromLine + IntoLine + Ord + Send + 'static> Sort<T> {
                 let filename = Self::get_dir_file_name(&dir, stage, num);
                 let lines = file_as_lines(filename)?;
                 iters_vec.push(lines.map(|maybe_line| {
-                    maybe_line.map(|line| T::from_line(&line))
+                    match maybe_line {
+                        Ok(line) => T::from_line(&line),
+                        Err(err) => Err(err)
+                    }
                 }));
             }
 

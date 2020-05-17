@@ -24,7 +24,10 @@ impl<T: FromLine> Iterator for SameSplitIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.lines.next() {
-            Some(maybe_line) => Some(maybe_line.map(|ln| T::from_line(&ln))),
+            Some(maybe_line) => Some(match maybe_line {
+                Ok(ln) => T::from_line(&ln),
+                Err(err) => Err(err)
+            }),
             None => None
         }
     }

@@ -1,3 +1,6 @@
+use std::io;
+use std::marker::Sized;
+
 /// Converts the value into a single line for use in sorting.
 ///
 /// As `Sort` implementation keeps the temporary data in text files with
@@ -21,7 +24,7 @@ pub trait IntoLine {
 /// entries separated by newlines, the type that is about to be sorted must
 /// implement this trait. Of course, the convertion must be revertible, such
 /// that `T::from_line(value.into_line()) == value` holds.
-pub trait FromLine {
+pub trait FromLine where Self: Sized {
     /// Performs the convertion from `line` to `Self`.
-    fn from_line(line: &str) -> Self;
+    fn from_line(line: &str) -> io::Result<Self>;
 }

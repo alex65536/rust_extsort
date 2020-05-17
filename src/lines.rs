@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self, Error, ErrorKind};
 use std::marker::Sized;
 
 /// Converts the value into a single line for use in sorting.
@@ -27,4 +27,30 @@ pub trait IntoLine {
 pub trait FromLine where Self: Sized {
     /// Performs the convertion from `line` to `Self`.
     fn from_line(line: &str) -> io::Result<Self>;
+}
+
+impl<T: IntoLine, E: IntoLine> IntoLine for Result<T, E> {
+    fn line_len(&self) -> usize {
+        match &self {
+            Ok(val) => 1 + val.line_len(),
+            Err(err) => 1 + err.line_len()
+        }
+    }
+
+    fn into_line(self) -> String {
+        match self {
+            Ok(val) => "1".to_string() + &val.into_line(),
+            Err(err) => "0".to_string() + &err.into_line()
+        }
+    }
+}
+
+impl<T: FromLine, E: FromLine> FromLine for Result<T, E> {
+    fn from_line(line: &str) -> io::Result<Self> {
+        match line.chars().next() {
+            Some('1') => Ok(Ok(T::from_line(&line[1..])?)),
+            Some('0') => Ok(Err(E::from_line(&line[1..])?)),
+            _ => Err(Error::from(ErrorKind::InvalidInput))
+        }
+    }
 }

@@ -1,5 +1,5 @@
 use threadpool::ThreadPool;
-use tempdir::TempDir;
+use tempfile::{Builder, TempDir};
 use std::io::{self, BufRead, BufReader, Write, BufWriter};
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -282,7 +282,7 @@ impl<T: FromLine + IntoLine + Ord + Send + 'static> Sort<T> {
         Ok(Sort {
             config,
             pool: ThreadPool::new(num_threads),
-            tmpdir: TempDir::new("extsort")?,
+            tmpdir: Builder::new().prefix("extsort").tempdir()?,
             stage_num: RefCell::new(0),
             file_num: RefCell::new(0),
             result_cell: Arc::new(Mutex::new(Ok(()))),

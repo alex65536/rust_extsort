@@ -141,10 +141,11 @@ impl<T: FromLine + IntoLine + Ord + Send + 'static> Sort<T> {
         }
 
         let out_filename = self.get_cur_file_name();
-        let mut buf_write = BufWriter::new(File::create(out_filename)?);
         self.next_file();
 
         self.add_to_pool(move || {
+            let mut buf_write = BufWriter::new(File::create(out_filename)?);
+
             data_vec.sort();
             for data in data_vec {
                 let line = data.into_line() + "\n";
@@ -189,11 +190,12 @@ impl<T: FromLine + IntoLine + Ord + Send + 'static> Sort<T> {
         }
 
         let out_filename = self.get_cur_file_name();
-        let mut buf_write = BufWriter::new(File::create(out_filename)?);
         self.next_file();
         let dir = self.tmpdir.path().to_path_buf();
 
         self.add_to_pool(move || {
+            let mut buf_write = BufWriter::new(File::create(out_filename)?);
+
             let mut iters_vec = Vec::with_capacity(last - first + 1);
             for num in first..last {
                 let filename = Self::get_dir_file_name(&dir, stage, num);
